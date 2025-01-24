@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f4f4f9;
+    }
+    .container {
+      text-align: center;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .input-container {
+      flex: 1;
+      margin-right: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    .qr-code-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .qr-code {
+      width: 200px;
+      height: 200px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #5cb85c;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #4cae4c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="input-container">
+      <h1>QR Code Generator</h1>
+      <input type="text" id="data-input" placeholder="Enter URL or text" required>
+    </div>
+
+    <div class="qr-code-container">
+      <canvas id="qr-code" class="qr-code"></canvas>
+      <a id="download-link" href="#" download="qrcode.png">
+        <button>Download QR Code</button>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const inputElement = document.getElementById("data-input");
+    const qrCodeCanvas = document.getElementById("qr-code");
+    const downloadLink = document.getElementById("download-link");
+
+    // Function to generate QR code in real-time
+    inputElement.addEventListener("input", function() {
+      const inputData = inputElement.value;
+      
+      // Generate QR code if the input is not empty
+      if (inputData) {
+        fetch("/generate", {
+          method: "POST",
+          body: new URLSearchParams({
+            data: inputData
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          const imgData = data.img_data;
+
+          // Create an image element to display the QR code
+          const qrImage = new Image();
+          qrImage.src = `data:image/png;base64,${imgData}`;
+          
+          // Display the QR code in the canvas
+          qrCodeCanvas.getContext('2d').clearRect(0, 0, qrCodeCanvas.width, qrCodeCanvas.height);
+          qrImage.onload = function() {
+            qrCodeCanvas.getContext('2d').drawImage(qrImage, 0, 0, qrCodeCanvas.width, qrCodeCanvas.height);
+          };
+          
+          // Enable the download link
+          downloadLink.href = `data:image/png;base64,${imgData}`;
+        });
+      } else {
+        // Clear the QR code when the input is empty
+        qrCodeCanvas.getContext("2d").clearRect(0, 0, qrCodeCanvas.width, qrCodeCanvas.height);
+        
+        // Disable the download link
+        downloadLink.href = "#";
+      }
+    });
+  </script>
+</body>
+</html>
